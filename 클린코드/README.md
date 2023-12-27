@@ -21,3 +21,63 @@
 3. 집합에서 특정 항목을 찾아낼 필요의 경우 추상 메서드나 추상 클래스를 만듬으로써 실제 구현은 언제든지 바꿀 수 있게 설계한다.
 
 ## 2장 의미 있는 이름
+
+**변수, 함수, 클래스, 패키지, 소스파일들의 이름 잘 짓는 규칙**
+
+* **의도가 분명하게 이름을 지어라**
+```java
+// 나쁜 코드
+List<int[]> list1 = new ArrayList<int[]>();
+
+for(int[] x : theList)
+    if(x[0] == 4)
+        list1.add(x)
+
+// 좋은 코드
+List<int[]> flaggedCells = new ArrayList<int[]>();
+
+for(int[] cell : gameBoard)
+    if(cell[STATUS_VALUE] == FLAGGED)
+        flaggedCells.add(cell);
+```
+
+* 개념에 대한 이름만 붙여도 코드가 상당히 나아진다.
+* 좋은 이름을 지으려면 시간이 걸리지만 좋은 이름으로 절약하는 시간이 훨씬 더 많다.
+  
+* **의미 있게 구분하라**
+```
+moneyAmount - money
+customerInfo - customer
+accountData - account
+```
+* 위의 예제와 같이 명확한 관례가 없다면 구분이 안되기에 읽는 사람이 차이를 알도록 이름을 사용하자.
+
+* **클래스이름과 객체 이름은 명사나 명사구**
+* 동사는 사용하지 않는다.
+```
+좋은 코드 - Customer, WikiPage, Account, AddressParser
+나쁜 코드 - Manager, Processor, Data, Info
+```
+
+* **메서드 이름은 동사나 동사구**
+* 접근자, 변경자, 조건자는 get, set, is 를 붙인다.
+```
+postPayment, deletePage, save
+```
+
+* **한 단어를 두 가지 목적으로 사용하지마라**
+* add라는 메서드를 만들었다해서 일관성을 고려해 add 메서드로 하나 더 만들지 말고 insert나 append 메서드 사용해라.
+
+* **발음하기 쉬운 이름을 사용해라**
+* **검색하기 쉬운 이름을 사용해라**
+```js
+// 나쁜 코드
+const fiveDays = 5;
+
+// 좋은 코드
+const int WORK_DAYS_PER_WEEK = 5;
+```
+
+* **한 개념에 한 단어만 사용해라**
+
+## 3장 함수
