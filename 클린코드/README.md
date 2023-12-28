@@ -81,3 +81,68 @@ const int WORK_DAYS_PER_WEEK = 5;
 * **한 개념에 한 단어만 사용해라**
 
 ## 3장 함수
+
+**함수를 만드는 첫째 규칙은 작게! 만드는 것이다**
+
+* 각 함수가 하나의 이야기를 표현할 수 있도록 함수를 작성하자.
+* 이 책에서 이상적인 함수의 크기는 아래와 같이 말하고 있다.
+
+```java
+publis static String renderPageWithSetupsAndTeardowns(PageData pageData, boolean isSuite) throws Exception{
+    if(isTestPage(pageData)){
+        includeSetupAndTeardownPages(pageData, isSuite);
+    }
+    return pageData.getHtml();
+}
+```
+
+* 쉽게 말해 if/else/while문 등에 들어가는 블록은 한 줄이어야 한다는 뜻이다.
+
+**함수는 한 가지의 기능만 하고, 한 가지를 잘 해야하며 한 가지만을 해야한다.**
+
+**서술적인 이름을 사용해라**
+
+* testableHtml -> SetupTeardownIncluderrender 
+* 책의 저자는 위와 같이 메서드 이름을 변경하였다.
+* 이름이 길어도 겁먹지말자. 길고 서술적인 이름은 짧고 어려운 이름보다 좋다.
+* 이름을 붙일 때는 모듈 내에서 함수 이름은 같은 문구, 명사, 동사를 사용하자.
+* includeSetupAndTeardownPages, includeSetupPages, includeSuiteSetupPage 등등
+
+**함수에서 이상적인 인수 개수는 적을 수록 좋다**
+
+* 함수에서 이상적인 인수 개수는 0개, 1개, 2개 .. 3개 이상은 가능한 피하는 편이 좋다.
+
+**오류 코드보다 예외를 사용하고, Try/Catch 블록은 뽑아내라**
+
+```java
+try{
+    deletePage(page);
+    registry.deleteReference(page.name);
+    configKeys.deleteKey(page.name.makeKey());
+} catch(Exception e){
+    logger.log(e.getMessage());
+}
+```
+
+* try/catch 블록은 정상 동작과 오류 처리 동작을 뒤섞으므로 별도 함수로 뽑아내는 편이 좋다.
+
+```java
+try{
+    deletePageAndAllReferences(page);
+} catch(Exception e){
+    logError(e)
+}
+
+private void deletePageAndAllReferences(Page page){
+    deletePage(page);
+    registry.deleteReference(page.name);
+    configKeys.deleteKey(page.name.makeKey());
+}
+
+private void logError(Exception e){
+    logger.log(e.getMessagE());
+}
+```
+
+* 함수는 한 가지 작업만 하듯이 오류 처리도 한 가지 작업에 속한다.
+* 오류를 처리하는 함수는 오류만 처리해야 마땅하다.
