@@ -220,7 +220,6 @@ this.pngBytes = new byte[((this.width + 1) * this.height * 3) + 200]
 
 **자료 추상화**
 
-
 * 변수를 비공개하여 변수에 의존하지 않게 만들기위해 사용한다. 하지만 getter와 setter를 public으로 설정하거나 interface를 사용하여 비공개 변수를 외부에 노출하는 이유는 뭘까?
 * 밑에 예제를 통해서 알아보자.
 
