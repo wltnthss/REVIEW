@@ -215,3 +215,41 @@ this.pngBytes = new byte[((this.width + 1) * this.height * 3) + 200]
 * 변수 선언은 변수를 사용하는 위치에 가까이 선언하자.
 
 > 기본적인 들여쓰기, 새로운 개념을 시작할 때는 빈 행, 밀접한 관계가 있는 변수와 메서드는 가까운 위치에 맞춰서 사용하자는 내용이 5장의 핵심이었다.
+
+## 6장 객체와 자료구조 
+
+**자료 추상화**
+
+
+* 변수를 비공개하여 변수에 의존하지 않게 만들기위해 사용한다. 하지만 getter와 setter를 public으로 설정하거나 interface를 사용하여 비공개 변수를 외부에 노출하는 이유는 뭘까?
+* 밑에 예제를 통해서 알아보자.
+
+```java
+// 구체적인 Point 클래스
+public class Point{
+    public double x;
+    public double y;
+}
+
+//추상적인 Point 클래스
+public interface Point{
+    double getX();
+    double getY();
+    void setCartesian(double x, double y);
+    double getR();
+    double getTheta();
+    void setPolar(double r, double theta);
+}
+```
+
+* 추상 인터페이스를 통해 사용자가 구현을 모른 채 자료의 핵심을 조작하는 것이 추상적인 클래스이다.
+* 그렇다고 무조건적으로 interface를 사용하는 것이 좋은 코드인가?
+* 결론은 **아니다.**
+
+> 절차적인 코드는 기존 자료 구조를 변경하지 않으면서 새 함수를 추가하기 쉽고, 새로운 자료 구조는 추가하기 어렵다.
+> 
+> 객체지향 코드는 기존 함수를 변경하지 않으면서 새 클래스를 추가하기 쉽고, 새로운 함수는 추가하기 어렵다.
+>
+> 즉, **객체 지향 코드에서 어려운 변경은 절차적인 코드에서는 쉽고, 절차적인 코드에서 어려운 변경은 객체 지향 코드에서는 쉽다.**
+
+## 7장 오류 처리
