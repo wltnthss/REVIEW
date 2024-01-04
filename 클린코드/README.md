@@ -252,3 +252,39 @@ public interface Point{
 > 즉, **객체 지향 코드에서 어려운 변경은 절차적인 코드에서는 쉽고, 절차적인 코드에서 어려운 변경은 객체 지향 코드에서는 쉽다.**
 
 ## 7장 오류 처리
+
+* 깨긋한 코드와 오류 처리는 확실히 연관성이 잇다.
+* 상당수 코드 기반은 전적으로 오류 처리 코드에 좌우된다.
+* 오류 처리로 인해 프로그램 논리를 이해하기 어려워진다면 깨끗한 코드라 부르기 어렵다.
+
+**오류 코드보다 예외를 사용해라**
+
+ ```java
+public void sendShutDown(){
+    try{
+        tryToShutDown();
+    }catch(DeviceSHutDownError e){
+        logger.log(e);
+    }
+}
+
+private void tryToShutDown() throws DeviceShutDownError{
+    DeviceHandle handle = getHande(DEV1);
+    Device Recofed record = retrieveDeviceRecord(handle);
+    ...
+}
+ ```
+
+ * 오류가 발생하면 예외를 던지는 편이 논리와 오류 처리 코드가 뒤섞이지 않아 간단하다.
+
+**미확인 예외를 사용해라**
+
+**예외에 의미를 제공해라**
+
+**호출자를 고려해 예외 클래스를 정의해라**
+
+**null을 반환하지 마라**
+
+**null을 전달하지 마라**
+
+> 오류 처리를 프로그램 논리와 분리해 안정적이고 유지보수가 높은 깨끗한 코드를 작성하자.
