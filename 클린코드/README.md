@@ -279,9 +279,34 @@ private void tryToShutDown() throws DeviceShutDownError{
 
 **미확인 예외를 사용해라**
 
+* checked, unchecked의 논란이 있었지만 이 책에서는 unchecked 사용을 권한다.
+* 왜냐하면 checked 는 메서드에서 확인된 예외를 던졌을 때 catch 블록이 세 단계 위에 있다면 그 사이 메서드 모두가 해당 예외를 정의해야하기에 OCP를 위반하기 때문이다.
+* 때로는 확인된 예외도 유용하기에 용도에 맞게 사용해라.
+
 **예외에 의미를 제공해라**
 
+* 오류 메세지에 정보를 담아 예외와 함께 던져라.
+* 로깅 기능을 통해 catch 블록에서 오류를 기록하도록 충분한 정보를 넘겨주어라.
+
 **호출자를 고려해 예외 클래스를 정의해라**
+
+* 외부 라이브러리가 던질 예외를 감싸는 예외 유형 하나를 반환해라.
+* 외부 API를 감싸면 의존성이 크게 줄어들어 테스트도 쉽고 비용도 적으며, API를 설계한 방식에 발목을 잡히지 않는다.
+* 아래는 예외 클래스를 정의한 예제이다.
+
+```java
+public class LocalPort {
+    try{
+        innerPort.open();
+    }catch (DeviceResponseException e){
+        throw new PortDeviceFailure(e);
+    }catch (ATM1212UnlockedException e){
+        throw new PortDeviceFailure(e);
+    }catch (GMXError e){
+        throw new PortDeviceFailure(e);
+    }...
+}
+```
 
 **null을 반환하지 마라**
 
