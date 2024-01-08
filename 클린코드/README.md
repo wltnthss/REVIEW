@@ -371,7 +371,73 @@ puiblic class Sensors{
 
 > 경계에 위치하는 코드는 깔끔하게 분리하며, 이를 테스트 케이스로 검증하자. 또한 외부 패키지를 호출하는 코드를 새로운 클래스로 감싸거나 Adapter 패턴을 사용하여 코드 가독성을 기르고, 일관성을 높이자.
 
+# 9장 단위테스트 
 
+**TDD 법칙 세 가지**
 
+* TDD가 실제 코드를 짜기 전에 단위 테스트부터 짜라고 요구하는 사실을 점점 더 중요해지고 있는 사실이다.
+* 이 규칙은 세 가지 법칙에 의거한다.
 
+1. 첫째 법칙 : 실패하는 단위 테스트를 작성할 때까지 실제 코드를 작성하지 않는다.
+2. 둘째 법칙 : 컴파일은 실패하지 않으면서 실행이 실패하는 정도로만 단위 테스트를 작성한다.
+3. 셋째 법칙 : 현재 실패하는 테스트를 통과할 정도로만 실제 코드를 작성한다.
 
+* 위의 법칙에 따르면 실제 코드를 사실상 전부 테스트하는 테스트 케이스가 나온다.
+* 하지만 실제 코드와 맞먹을 정도로 방대한 테스트 코드는 심각한 관리 문제를 유발하기도 한다.
+
+**깨끗한 테스트 코드**
+
+* 테스트 코드는 잘 설계하거나 변수명을 신경쓰지않고 돌아가게만 실제 코드를 테스트하면 그만이었다.
+* 하지만 지저분한 테스트 코드일수록 변경하기 어려워지고 보수하는 비용도 늘어가며 개발자 사이에서 큰 불만으로 자리 잡게된다.
+* 테스트 코드를 사용하지 않으면 결함 수가 많아지기에 개발자는 변경을 주저하게되고 코드는 망가지게 된다.
+
+> **결국 테스트 코드는 실제 코드 못지 않게 중요하다** 라는 말을 전하고 있다.
+
+```java
+
+public void testGetPageHierarchyAsXml() throws Exception{
+    // 테스트 자료 생성 (given)
+    makePages("PageOne", "PageOne.ChildOne", "PageTwo");
+
+    // 테스트 자료 조작 (when)
+    submitRequest("root", "type:pages");
+
+    // 테스트 자료 검증 (then)
+    assertResponseIsXML();
+    assertResponseContains(
+        "<names>PageOne</names>", "<name>PageTwo</name>", "<name>ChildOne</name>"
+    );
+```
+
+* 위의 코드와 같이 given, when, then 규칙에 맞춘 규격으로 테스트코드를 작성하는 습관을 기르자.
+
+**테스트 당 assert 하나**
+
+* JUnit으로 테스트 코드를 짤 때는 함수마다 assert문을 단 하나만 사용하자.
+* assert문이 단 하나인 함수는 결론이 하나라서 코드를 이해하기 쉽고 빠르다.
+* 꼭 하나가 아니여도 assert문 개수는 최대한 줄이는게 좋다.
+* 밑에 예제와 같이 작성하면 알아보기도 쉬울뿐더러 유지보수에도 장점이 있다.
+
+```java
+@Test
+public void turnOnCoolerAndBlowerIfTooHot() throws Exception{
+    tooHot();
+    assertEquals("hBChl", hw.getState());
+}
+
+@Test
+public void turnOnHeaterAndBlowerIfTooCold() throws Exception{
+    tooCold();
+    assertEquals("HBchl", hw.getState());
+}
+```
+
+**F.I.R.S.T**
+
+1. F : Fast 빠르게 - 테스트는 빨리 돌아야한다.
+2. I : Indepencend 독립적으로 - 각 테스트는 서로 의존하면 안 된다.
+3. R : Repeatble - 어떤 환경에서도 반복 가능해야 한다.
+4. S : Self-Validating - 부울값으로 결과를 내야 한다. (성공 아니면 실패)
+5. T : Timely - 테스트는 적시게 작성해야 한다. 단위 테스트는 테스트하려는 실제 코드를 구현하기 직전에 구현하는 습관을 기르자.
+
+> 테스트 코드는 실제 코드만큼이나 프로젝트 건강에 중요하다. 테스트 케이스를 작성하는 습관이 길러져 있지 않는 것 같으니, 실제 코드 작성전에 깨끗한 테스트 케이스 코드를 작성하는 습관을 기르자.
