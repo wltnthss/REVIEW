@@ -441,3 +441,54 @@ public void turnOnHeaterAndBlowerIfTooCold() throws Exception{
 5. T : Timely - 테스트는 적시게 작성해야 한다. 단위 테스트는 테스트하려는 실제 코드를 구현하기 직전에 구현하는 습관을 기르자.
 
 > 테스트 코드는 실제 코드만큼이나 프로젝트 건강에 중요하다. 테스트 케이스를 작성하는 습관이 길러져 있지 않는 것 같으니, 실제 코드 작성전에 깨끗한 테스트 케이스 코드를 작성하는 습관을 기르자.
+
+## 10장 클래스
+
+**클래스 체계**
+
+* 클래스를 정의하는 표준 자바 관례에 따르면, 가장 먼저 변수 목록이 나온다.
+* 다음으로는 비공개(private) 변수가 나오며 다음에는 공개 함수가 나오고, 비공개 함수는 자신을 호출하는 공개 함수 직후에 넣는다.
+* 즉, 추상화 단계가 순차적으로 내려간다.
+
+**클래스는 작아야 한다!**
+
+* 클래스를 만들 때 첫 번째 규칙은 크기다. 클래스를 설계할 때도 함수와 마찬가지로, 작게가 기본 규칙이라는 의미를 담고 있다.
+* 클래스 이름은 해당 클래스 책임을 기술해야 한다.
+* SRP(단일 책임 원칙) 로 클래스나 모듈을 변경할 이유는 하나에 의거하여 클래스를 작성하자.
+* 단일 책임 클래스가 많아지면 큰 그림을 이해하기 어렵다고 우려워하지만, 규모가 커져도 부품의 수는 비슷하기에 큰 서랍에 모두 던져 넣지 말고 작은 서랍을 많이 두고 명확한 컴포넌트를 나눠 넣자
+
+**응집도**
+
+* 클래스는 인스턴스 변수 수가 작아야 한다.
+* 일반적으로 메서드가 변수를 더 많이 사용할수록 메서드와 클래스는 응집도가 더 높다.
+* 아래는 응집도가 높은 클래스의 예제인 Stack 클래스이다.
+
+```java
+public class Stack{
+    private int topOfStack = 0;
+    List<Integer> elements = new LinkedList<Integer>();
+
+    public int size(){
+        return topOfStack;
+    }
+
+    public void push(int element){
+        topOfStack++;
+        elements.add(element)
+    }
+
+    public int pop() throws PoppedWhenEmpty(){
+        if(topOfStack == 0){
+            throw new PoppedWhenEmpty();
+        }
+        int element = elements.get(--topOfStack);
+        elements.remove(topOfStack);
+        return element;
+    }
+}
+```
+
+* 몇몇 메서드만이 사용하는 인스턴스가 아주 많아진다는 것은 클래스를 쪼개야 한다는 신호이다.
+* 응집도가 높아질수록 변수와 메서드를 적절히 분리해 새로운 클래스 두 세개로 쪼개준다.
+
+## 11장 시스템
