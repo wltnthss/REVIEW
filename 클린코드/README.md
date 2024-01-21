@@ -529,3 +529,28 @@ public Service getService(){
 * 대다수 DI 컨테이너는 객체를 생성하지 않고, 대부분 팩토리를 호출하거나 프록시를 생성하는 방법을 제공합니다.
 
 **자바 프록시**
+
+* 자바 프록시는 단순한 상황에 적합합니다. 개별 객체나 클래스에서 메서드 호출을 감싸는 경우가 좋은 예입니다.
+* 프록시는 스프링 AOP 같은 자바 프레임워크 내부적으로 프록시를 사용합니다.
+* 프레임워크 사용자가 모르게 주요 객체를 생성하고 서로 연결하는 등의 DI 컨테이너등의 구체적인 동작을 제어합니다.
+* 아래는 대표적은 스프링 설정 파일의 예입니다.
+
+```xml
+    ...
+<beans>
+    <bean id ="bankDataAccessObject"
+    class ="com.example.banking.persistence.BankDataAccessObject"
+    p:dataSource-ref="appDataSource"/>
+
+    <bean id="bank"
+    class = "comn.example.banking.persistence.BankDataAccessObject"
+    p:dataSource-ref="appDataSource"/>
+    ...
+</beans>
+```
+
+* 각 빈은 중첩된 러시아 인형의 일부분과 같습니다.
+* Bank 도메인 객체는 DAO로 프록시되었고, 자료 접근자 객체는 JDBC 드라이버 자료 소스로 프록시되었습니다.
+* XML은 장황하고 읽기 어렵다는 문제가 존재하지만, 자동으로 생성되는 프록시나 관점 논리보다는 단순합니다.
+
+> 11장은 시스템은 깨끗해야하며 깨끗하지 못한 아키텍처는 도메인 논리를 흐려서 품질이 저하된다는 것이 주된 내용이었습니다. 모든 추상화 단계에서는 POJO를 작성하고 구현 관심사를 분리하며 시스템을 설계하든 개별 모듈을 설계하든, **실제로 돌아가는 가장 단순한 수단을 사용**하자는게 핵심이었습니다.
