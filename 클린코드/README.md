@@ -585,4 +585,79 @@ public Service getService(){
 **중복을 없애라**
 
 * 우수한 설계에서 중복은 커다란 적입니다. 중복은 추가 작업, 추가 위험, 불필요한 복잡도를 뜻하며 여러 가지 형태로 표출됩니다.
-* 
+
+```java
+public void scaleToOneDimension(float desiredDimension, float imageDimension){
+    if(Math.abs(desiredDimension - imageDimension)){
+        return;
+    }
+    float scalingFactor = desiredDimension / imageDimension;
+    scalingFactor = (float)(Math.floor(scalingFactor * 100) * 0.01f);
+
+    RenderedOp newImage = ImageUtilities.getScaledImage(image, scalingFactor, scalingFactor);
+    image.dispose();
+    System.gc();
+    image = newImage;
+}
+
+public synchronized void rotate(int degrees){
+    RenderedOp newImage = ImageUtilities.getRotatedImage(image, degrees);
+    image.dispose();
+    System.gc();
+    image = newImage;
+}
+```
+
+* 위의 코드를 보면 scaleToOneDimension 메서드와 rotate 메서드는 일부 코드가 동일하게 동작한다. 아래와 같이 리팩터링하여 중복을 제거할 수 있다.
+
+```java
+public void scaleToOneDimension(float desiredDimension, float imageDimension){
+    if(Math.abs(desiredDimension - imageDimension)){
+        return;
+    }
+    float scalingFactor = desiredDimension / imageDimension;
+    scalingFactor = (float)(Math.floor(scalingFactor * 100) * 0.01f);
+
+    // 중복 제거
+    replaceImage(ImageUtilities.getRotatedImage(image, degrees));
+}
+
+public synchronized void rotate(int degrees){
+    // 중복 제거
+    replaceImage(ImageUtilities.getRotatedImage(image, degrees));
+}
+public void replaceImage(RenderedOp newImage){
+    image.dispose();
+    System.gc();
+    image = newImage;
+}
+```
+
+* 적은 양이지만 공통적인 코드를 새 메서드로 뽑고나니 클래스가 SRP를 위반한다.
+* 그러므로 새로 만든 replaceImage 메서드를 다른 클래스로 옮기면 가시성이 더 높아지며 재사용할 기회를 포착할지도 모른다.
+
+**표현하라**
+
+* 자신이 이해하는 코드는 코드를 짜는 동안 문제에 빠져 코드를 구석구석 이해해서 이해하기 쉽다.
+* 하지만 나중에 코드를 유지보수할 사람이 코드를 짜는 사람만큼이나 문제를 깊이 이해할 가능성은 희박하다.
+* 때문에 코드는 개발자의 의도를 분명히 표현해야한다. 의도를 표현히 할 수 있는 방법 4가지에 대해서 알아보자.
+
+1. 좋은 이름을 선택한다
+   * 이름과 기능이 완전히 딴판이거나 단순한 이름은 좋지 않다.
+2. 함수와 클래스 크기를 가능한 줄인다.
+   * 작은 클래스와 작은 함수는 이름 짓기도 쉽고, 구현하기도 쉽고, 이해하기도 쉽다.
+3. 표준 명칭을 사용한다.
+   * 디자인 패턴은 의사소통과 표현력 강화가 주요 목적이다.
+   * 클래스가 표준 패턴을 사용해 구현된다면 클래스 이름에 패턴 이름을 넣어줌으로써 다른 개발자가 클래스 설계 의도를 이해하기 쉽게된다.
+4. 단위 테스트 케이스를 꼼꼼히 작성한다.
+    * 테스트 케이스는 **소위 예제로 보여주는 문서**다. 잘 만든 테스트 케이슬르 읽어보면 클래스 기능이 한눈에 들어온다.
+  
+**클래스와 메서드 수를 최소로 줄여라**
+
+* 이 책에서 가장 많이 언급하는 구절인 것 같다고 생각이 든다.
+* 중복을 제거하고, 의도를 표현하고, SRP를 준수한다는 기본적인 개념도 극단으로 치달으면 득보다 실이 많아진다.
+* 그래서 이 규칙은 함수와 클래스 수를 가능한 줄이라고 제안한다.
+* 즉, **줄이는 작업도 중요하지만, 테스트 케이스를 만들고 중복을 제거하고 의도를 표현하는 작업이 더 중요하다는 뜻**이다.
+
+## 13장 동시성
+
