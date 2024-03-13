@@ -511,7 +511,7 @@ public Service getService(){
 ```
 
 * 위의 코드는 필요할 때까지 객체를 생성하지 않으므로 불필요한 부하가 걸리지 않는다는 점과 어떤 경우에도 null포인터를 반환하지 않는다는 장점이 있다.
-* 하지만 getService() 메서드와 MyServiceImpl은 생성자 인수에 명시적으로 의존하고 있어 객체를 사용하지 않고 있더라도 의존성을 해결하지 않으면 컴파일이 안 된다. 또한 일반 런타임 로직에다 객체 생성 로직을 섞어놓은 탓에 null인 경로와 null이 아닌 경로도 테스트해야 한다.xc 
+* 하지만 getService() 메서드와 MyServiceImpl은 생성자 인수에 명시적으로 의존하고 있어 객체를 사용하지 않고 있더라도 의존성을 해결하지 않으면 컴파일이 안 된다. 또한 일반 런타임 로직에다 객체 생성 로직을 섞어놓은 탓에 null인 경로와 null이 아닌 경로도 테스트해야 한다.
 * 즉, 단일 책임 원칙(SRP)을 깨고 있는 문제점이 존재한다.
 
 **팩토리**
@@ -650,7 +650,7 @@ public void replaceImage(RenderedOp newImage){
    * 디자인 패턴은 의사소통과 표현력 강화가 주요 목적이다.
    * 클래스가 표준 패턴을 사용해 구현된다면 클래스 이름에 패턴 이름을 넣어줌으로써 다른 개발자가 클래스 설계 의도를 이해하기 쉽게된다.
 4. 단위 테스트 케이스를 꼼꼼히 작성한다.
-    * 테스트 케이스는 **소위 예제로 보여주는 문서**다. 잘 만든 테스트 케이슬르 읽어보면 클래스 기능이 한눈에 들어온다.
+    * 테스트 케이스는 **소위 예제로 보여주는 문서**다. 잘 만든 테스트 케이스를 읽어보면 클래스 기능이 한눈에 들어온다.
   
 **클래스와 메서드 수를 최소로 줄여라**
 
@@ -730,3 +730,100 @@ public void replaceImage(RenderedOp newImage){
 > 단순히 돌아가는 코드에 만족하지말자. 나쁜 코드보다 더 오랫동안 개발 프로젝트에 악영향을 미치는 요인도 없다. 코드는 언제나 최대한 깔끔하고 단순하게 정리하자.
 
 ## 15장 JUnit 들여다보기
+
+* 세상에 개선이 불필요한 모듈은 존재하지 않는다. JUnit framework ComparisonCompactor.java 를 리팩토링해보자.
+
+```java
+public class ComparisonCompactor {
+
+    private static final String ELLIPSIS = "...";
+    private static final String DELTA_END = "]";
+    private static final String DELTA_START = "[";
+
+    private int fContxtLength;
+    private String fExpected;
+    private String fActual;
+    private int fPrefix;
+    private int fSuffix;
+
+    public ComparisonCompactor(int contextLength, String expected, String actual){
+        fContxtLength = contextLength;
+        fExpected = expected;
+        fActual = actual;
+    }
+
+    @SuppressWarnings("deprecation")
+    public String compact(String message){
+        if(fExpected == null || fActual == null || areStringsEquals()){
+            return Assert.format(message, fExpected, fActual);
+        }
+
+        findCommonPrefix();
+        findCommonSuffix();
+
+        String expectd = compactString(fExpected);
+        String actual = compactString(fActual);
+        return Assert.format(message, expected, actual);
+    }
+
+    private String compactString(String source) {
+        String result = DELTA_START + source.substring(fPrefix, source.length() - fSuffix + 1) + DELTA_END;
+        if (fPrefix > 0) {
+            result = computeCommonPrefix() + result;
+        }
+        if (fSuffix > 0) {
+            result = result + computeCommonSuffix();
+        }
+        return result;
+    }
+
+    private void findCommonPrefix() {
+        fPrefix = 0;
+        int end = Math.min(fExpected.length(), fActual.length());
+        for (; fPrefix < end; fPrefix++) {
+            if (fExpected.charAt(fPrefix) != fActual.charAt(fPrefix)) {
+                break;
+            }
+        }
+    }
+
+    private void findCommonSuffix() {
+        int expectedSuffix = fExpected.length() - 1;
+        int actualSuffix = fActual.length() - 1;
+        for (; actualSuffix >= fPrefix && expectedSuffix >= fPrefix; actualSuffix--, expectedSuffix--) {
+            if (fExpected.charAt(expectedSuffix) != fActual.charAt(actualSuffix)) {
+                break;
+            }
+        }
+        fSuffix = fExpected.length() - expectedSuffix;
+    }
+
+    private String computeCommonPrefix() {
+        return (fPrefix > fContextLength ? ELLIPSIS : "") + fExpected.substring(Math.max(0, fPrefix - fContextLength), fPrefix);
+    }
+
+    private String computeCommonSuffix() {
+        int end = Math.min(fExpected.length() - fSuffix + 1 + fContextLength, fExpected.length());
+        return fExpected.substring(fExpected.length() - fSuffix + 1, end) + (fExpected.length() - fSuffix + 1 < fExpected.length() - fContextLength ? ELLIPSIS : "");
+    }
+
+    private boolean areStringsEqual() {
+        return fExpected.equals(fActual);
+    }
+}
+```
+
+* 깃허브 코드만 봐서는 바로 이해가 잘되지 않아서 직접 작성하면서 이해해보았다.
+* 잘정리된 모듈이지만 필요한 부분을 리팩토링 해보자.
+
+```java
+if(fExpected == null || fActual == null || areStringsEquals()){
+    return Assert.format(message, fExpected, fActual);
+}
+
+private boolean shouldNotCompact(){
+    return fExpected == null || fActual == null || areStringsEquals();
+}
+```
+
+* 의도를 명확히 표헌하기 위해 조건문은 캡슐화하여 적절한 이름을 붙여서 사용하자.
