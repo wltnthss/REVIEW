@@ -827,3 +827,403 @@ private boolean shouldNotCompact(){
 ```
 
 * 의도를 명확히 표헌하기 위해 조건문은 캡슐화하여 적절한 이름을 붙여서 사용하자.
+
+## 17장 냄새와 휴리스틱
+
+* Refactoring의 저서 마틴 파울러는 다양한 프로그램을 검토하고 코드를 리팩터링할 때 왜? 라는 자문한 다음 답들을 기록했다 기록들에 대한 목록들을 살펴보자.
+
+**주석**
+
+* C1 : 부적절한 정보
+    * 주석은 코드와 설계에 기술적인 설명을 부연하는 수단이다.
+    * 다른 시스템(소스 코드 관리 시스템, 버그 추적 시스템 등등)에 저장할 정보는 주석으로 적절하지 못하다.
+
+* C2 : 쓸모 없는 주석
+    * 오래된 주석, 엉뚱한 주석, 잘못된 주석은 필요가 없다.
+    * 주석은 빨리 낡으며 쓸모 없어질 주석은 아예 달지 않는 편이 가장 좋다.
+
+* C3 : 중복된 주석
+    * 코드만으로 충분한데 구구절절 설명하는 주석이 중복된 주석이다.
+    * 그에 대한 예는 아래와 같다.
+
+```
+i++;    // i 증가
+```
+
+* C4: 성의 없는 주석
+    * 주석을 달 참이라면 시간을 들여 멋지게 작성하자(단어와 문법을 간결하고 명료하게 작성)
+
+* C5: 주석 처리된 코드
+    * 코드를 읽다가 주석으로 처리된 코드가 줄줄이 나오면 거슬린다.
+    * 누군가에게 필요하거나 사용할 수도 있어 삭제하지 않는다.
+    * 소스 코드 관리 시스템이 기억하니 주석으로 처리된 코드를 발견하면 삭제할 수 있도록 하자.
+
+**환경**
+
+* E1 : 여러 단계로 빌드해야 한다.
+    * 빌드는 간단히 한 단계로 끝나야 한다.
+    * 한 명령으로 전체를 체크아웃해서 한 명령으로 빌드할 수 있어야 한다.
+
+```
+svn get mySystem
+cd mySystem
+ant all
+```
+
+* E2 : 여러 단계로 테스트해야 한다
+    * 모든 단위 테스트는 한 명령으로 돌려야한다.
+    * IDE에서 버튼 하나로 모든 테스트를 돌린다면 가장 이상적이다.
+
+**함수**
+
+* F1 : 너무 많은 인수
+    * 함수에서 인수 개수는 작을수록 좋다. 아예 없으면 가장 좋다.
+
+* F2 : 플래그 인수
+    * boolean 인수는 함수가 여러 기능을 수행한다는 명백한 증거이므로 피해야 마땅하다
+
+* F4 : 죽은 함수
+    * 아무도 호출하지 않는 함수는 과감하게 삭제해라.
+
+**일반**
+
+* G1 : 한 소스 파일에 여러 언어를 사용한다.
+    * 이상적으로는 소스 파일 하나에 언어 하나만 사용하는 방식이 가장 좋다.
+    * 각별한 노력을 기울여 소스파일에서 언어 수와 범위를 최대한 줄이도록 애써야 한다.
+
+* G2 : 경계를 올바로 처리하지 않는다.
+    * 코드는 올바로 동작해야 한다.
+    * 모든 경계 조건, 모든 예외는 우아하고 직관적인 알고리즘을 좌초시킬 암초다.
+    * 모든 경계 조건을 찾아내고, 모든 경계 조건을 테스트하는 테스트 케이스를 작성해라.
+
+* G3 : 안전 절차 무시 
+    * 컴파일러 경고 일부를 꺼버리면 빌드가 쉬워질지 모르지만 자칫하면 끝없는 디버깅에 시달린다.
+    * 실패하는 테스트 케이스를 일단 제껴두고 나중으로 미루는 태도는 신용카드가 공짜 돈이라는 생각만큼 위험하다.
+
+* G4 : 중복 
+    * 코드에서 중복을 발견할 때마다 추상화할 기회로 간주해라.
+    * 중복된 코드를 하위 루틴이나 다른 클래스로 분리해라.
+    * 추상화로 중복을 정리하면 설계 언어의 어휘가 늘어난다.
+    * 똑같은 코드가 여러 차례 나오는 중복이라면 간단한 함수로 교체해라.
+
+* G5 : 과도한 정보
+    * 잘 정의된 모듈은 인터페이스가 아주 작다.
+    * 잘 정의된 인터페이스는 많은 함수를 제공하지 않으므로 결합도가 낮다.
+    * 좋은 개발자는 클래스나 모듈 인터페이스에 노출할 함수를 제한할 줄 알아야 한다.
+    * 클래스가 제공하는 메서드 수는 작을수록 좋다.
+    * 함수가 아는 변수 수도 작을수록 좋으며 클래스에 들어있는 인스턴스 변수 수도 작을수록 좋다.
+    * 하위 클래스에서 필요하다는 이유로 protected 변수나 함수를 마구 생성하지 말고 인터페이스를 작게 만듬으로써 정보를 제한해 결합도를 낮춰라.
+
+* G6 : 죽은 코드
+    * 죽은 코드란 실행되지 않는 코드를 가르킨다.
+    * 불가능한 조건을 확인하는 if문과 throw 문이 없는 try문에서 catch 블록이 좋은 예이다.
+
+    * 죽은 코드는 오래될 수록 악취가 강해지기에 제거해주도록 하자.
+* G7 : 수직 분리
+    * 변수와 함수는 사용되는 위치에 가깝게 정의한다.
+    * 지역 변수는 처음으로 사용하기 직전에 선언하며 수직으로 가까운 곳에 위치해야 한다.
+    * 선언한 위치로부터 몇백 줄 아래에서 사용하면 안된다.
+
+* G8 : 잡동사니 
+    * 비어 있는 기본 생성자가 왜 필요한가?
+    * 쓸떼없이 코드만 복잡하게 만드는 사용하지 않는 변수, 호출하지 않는 변수, 사용하지 않는 주석은 삭제하자.
+
+* G9 : 인위적 결합
+    * 서로 무관한 개념을 인위적으로 결합하지 않는다.
+    * 일반적인 enum 은 특정 클래스에 속한 이유가 없다.
+    * enum이 클래스에 속한다면 enum을 사용하는 코드가 특정 클래스를 알아야만 하기 때문이다.
+    * 범용 static 함수도 마찬가지로 특정 클래스에 속한 이유가 없다.
+    * 함수, 상수 변수를 선언할 때는 시간을 들여 올바른 위치를 고민하자.
+
+* G10 : 알고리즘을 이해해라
+    * 대다수 괴상한 코드는 사람들이 알고리즘을 충분히 이해하지 않은 채 코드를 구현한 탓이다.
+    * 잠시 멈추고 실제 알고리즘을 고민하는 대신 if문과 플래그를 넣어보며 코드를 돌리는 탓이다.
+    * 구현이 끝났다고 선언하기 전에 함수가 돌아가는 방식을 확실히 이해하는지 확인해보자.
+    * 알고리즘이 올바르다는 사실을 확인하고 이해하려면 기능이 뻔히 보일 정도로 함수를 깔끔하고 명확하게 재구성하는 방법이 최고다.
+
+* G11 : 정확하라
+    * 검색 결과 중 첫 번째 결과만 유일한 결과로 간주하는 행동은 순진하다.
+    * 부동 소수점으로 통화를 표현하는 해동은 거의 범죄에 가깝다.
+    * List로 선언할 변수를 ArrayList로 선언하는 행동은 지나친 제약이다.
+    * 코드에서 뭔가를 결정할 때는 정확히 결정한다.
+    * 호출하는 함수가 null을 반환할지도 모른다면 null을 반드시 점검한다.
+    * 조회 결과가 하나뿐이라 짐작한다면 하나인지 확실히 확인한다.
+    * 통화를 다뤄야 한다면 정수를 사용하고 반올림을 올바르게 처리한다.
+
+* G12 : 관례보다 구조를 사용하라
+    * 실제 결정을 강제할 떄는 규칙보다 관롈르 사용한다.
+    * 예를 들어, enum 변수가 멋진 switch/case 문보다 추상 메서드가 있는 기초 클래스가 더 좋다.
+
+* G13 : 조건을 캡슐화해라
+    * 부울 논리는 if나 while문에다 넣어 생각하지 않아도 이해하기 어렵다. 조간에 의도를 분명히 밝히는 함수로 표현해라.
+    * 밑에 코드로 예를 들어보았을 때 1번의 코드보다 2번의 코드가 더 좋은 것.
+
+```java
+// 1.
+if( shouldBeDeleted(timer))
+// 2.
+if( timer.hasExpired() && !timer.isRecurrent())
+```
+
+* G14 : 부정 조건은 피해라
+    * 부정 조건은 긍정 조건보다 이해하기 어렵다. 가능하면 긍정 조건으로 표현해라.
+
+* G15 : 함수는 한 가지만 해야 한다.
+    * 함수를 짜다보면 한 함수안에 여러 단락을 이어, 일련의 작업을 수행하고픈 유혹에 빠진다.
+    * 이런 함수는 한 가지만 수행하는 함수가 아니다. 한 가지만 수행하는 좀 더작은 함수 여럿으로 나눠야 마땅하다.
+    * 밑에 코드를 예로 들어보자.
+
+```java
+public void pay(){
+    for(Employee e : employees){
+        if(e.isPayday()){
+            Money pay = e.calculatePay();
+            e.deliverPay(pay);
+        }
+    }
+}
+```
+
+* 위 코드는 직원 목록을 루프로 돌며, 각 지원의 월급일을 확인하고, 해당 직원에게 월급을 지급한다.
+* 위 함수는 다음 함수 셋으로 나누어 사용하는 편이 좋다.
+
+```java
+public void pay(){
+    for(Employee e : employees){
+        payIfNecessary(e);
+    }
+}
+
+private void payIfNecessary(Employee e){
+    if(e.ispayday()){
+        calculateAndDeliverPay(e);
+    }
+}
+
+private void calculateAndDeliverPay(Employee e){
+    Money pay = e.calculatePay();
+    e.deliverPay(pay);
+} 
+```
+
+* 이와 같이 작성하면 각 함수는 한 가지 임무만 수행한다.
+
+* G16 : 숨겨진 시간적인 결합
+    * 때로는 시간적인 결합이 필요하다.
+    * 하지만 시간적인 결합을 숨겨서는 안 된다.
+    * 함수를 짤 때는 함수 인수를 적절히 배치해 함수가 호출되는 순서를 명백히 드러낸다.
+    * 아래 예제를 통해 알아보자.
+
+```java
+public class MoogDiver{
+    Gradient gradient;
+    List <Spline> splines;
+
+    public void dive(String reason){
+        saturateGradient();
+        reticulateSplines();
+        diveForMoog(reason);
+    }
+}
+```
+
+* 위에 코드에서는 세 함수가 실행되는 순서가 중요하다.
+* reticulateSplines() 함수를 먼저 호출하면 오류가 발생해도 막을 도리가 없다.
+* 위에 코드는 아래와 같이 리팩터링하는게 좋다.
+
+```java
+public class MoogDiver{
+    Gradient gradient;
+    List<Spline> splines;
+
+    public void dive(String reason){
+        Gradient gradient = saturateGradient();
+        List<Spline> splines = reticulateSplines(gradient);
+        diveForMoog(splines, reason);
+    }
+}
+```
+
+* 위 코드는 각 함수가 내놓는 결과가 다음 함수에 필요하기 때문에 순서를 바꿔 호출할 수가 없다.
+* 함수는 복잡해지나 시간적인 결합을 좀 더 명백히 들어내기에 아래의 코드가 더 좋은 코드이다.
+
+**자바**
+
+* J1 : 상수는 상속하지 않는다.
+    * 어떤 프로그래머는 상수를 인터페이스에 넣은 다음 그 인터페이스를 상속해 해당 상수를 사용한다.
+
+```java
+public class HourlyEmployee extends Employee {
+    private int tenthsWorked;
+    private double hourlyRate;
+
+    public Money calculatePay(){
+        int straightTime = Math.min(tenthsWored, TENTHS_PER_WEEK);
+        int overTime = tenthsWorked - straightTime;
+        return new Money(
+            hourlyRate * (tenthsWored + OVERTIME_RATE * overTime);
+        );
+    }
+}
+...
+
+```
+
+* TENTHS_PER_WEEK, OVERTIME_RATE 라는 상수는 Employess 클래스에서 왔을지도 모른다. 살펴보자.
+
+```java
+public abstract class Employee implements PayrollConstants {
+    public abstract boolean is Payday();
+    public absract Money calculatePay();
+    public abstract void deliverPay(Money pay);
+}
+```
+
+* Employess 클래스에도 없으니 PayrollConstants 인터페이스를 살펴보자.
+
+```java
+public interface PayrollConstants{
+    public static final int TENTHS_PER_WEEK = 400;
+    public static final double OVERTIME_RATE = 1.5;
+}
+```
+
+* 위와 같은이상수를 상속 계층 맨 위에 숨겨 놓은 코드는 끔찍한 관행이며 상속은 이렇게 사용하면 안된다.
+* 대신에 static import 를 사용해서 리팩터링하자.
+
+```java
+import static PayrollConstants.*;
+
+public class HourlyEmployee extends Employee {
+    private int tenthsWorked;
+    private double hourlyRate;
+
+    public Money calculatePay(){
+        int straightTime = Math.min(tenthsWored, TENTHS_PER_WEEK);
+        int overTime = tenthsWorked - straightTime;
+        return new Money(
+            hourlyRate * (tenthsWored + OVERTIME_RATE * overTime);
+        );
+    }
+}
+```
+
+* J2 : 상수 대 Enum
+
+* 자바 5는 enum을 제공한다.
+* public static final int 라는 옛날 기교를 더 이상 사용할 필요가 없다.
+* enum 문법은 메서드와 필드도 사용할 수 있어 훨씬 더 유연하고 서술적인 강력한 도구이다.
+* 아래 좋은 예제를 통해 알아보자.
+
+```java
+public class HourlyEmployee extends Employee{
+    private int tenthsWoreked;
+    HourlyPayGrade grade;
+
+    public Money calculatePay(){
+        int straightTime = Math.min(tenthsWored, TENTHS_PER_WEEK);
+        int overTime = tenthsWored - straightTime;
+        return new Money(
+            grade.rate() * (tenthsWored + OVERTIME_RATE * overTime)
+        );
+    }
+
+    ...
+}
+
+public enum HourlyPayGrade{
+    APPRENTICE{
+        public double rate(){
+            return 1.0;
+        }
+    },
+    LIEUTENANT_JOURNEYMAN{
+        public double rate(){
+            return 1.2;
+        }
+    },
+    JOURNEYMAN {
+        public double rate(){
+            return 1.5;
+        }
+    },
+    MASTER {
+        public double rate(){
+            return 2.0;
+        }
+    };
+
+    public abstract double rate();
+}
+```
+
+**이름**
+
+* N1 : 서술적인 이름을 사용해라
+    * 소프트웨어 가독서으이 90%는 이름이 결정한다.
+    * 그러므로 시간을 들여 현명한 이름을 선택하고 유효한 상태로 유지하여 이름을 정하자.
+
+```java
+private boolean isStrike(int frame){
+    return rolls[frame] == 10;
+}
+```
+
+* 신중하게 선택한 이름을 추가 설명을 포함한 코드보다 강력하다.
+* isStrike() 함수가 하는 일을 충분히 미뤄 짐작할 수 있는 좋은 코드이다.
+
+* N2 : 적절한 추상화 수준에서 이름을 선택해라
+    * 구현을 드러내는 이름은 피해라.
+    * 작업 대상 클래스나 함수가 위치하는 추상화 수준을 반영하는 이름을 선택해라.
+    * 잘이해가 되지 않으니 코드와 같이 알아보자.
+
+```java
+public interface Modem {
+    boolean dial(String phoneNumber);
+    boolean disconnect();
+    boolean send(char c);
+    char recv();
+    String getConnectedPhoneNumber();
+}
+```
+
+* 얼핏봐서는 문제가 없는 코드이지만 전화번호라는 개념은 추상화 수준이 틀렸다.
+* 아래와 같이 더 좋은 이름 선택 전략을 통해 리팩터링해보자.
+
+```java
+public interface Modem{
+    boolean connect(String connectionLoacator);
+    boolean disconnect();
+    boolean send(char c);
+    char recv();
+    String getConnectedLocator();
+}
+```
+
+* 위와 같이 연결 대상의 이름을 전화번호로 제한하지 않으면 다른 연결 방식에도 가능하다.
+
+* N3 : 명확한 이름
+    * 함수나 변수의 목적을 명확히 밝히는 이름을 선택한다.
+
+```java
+private String doRename() throws Exception{
+    if(refactorReferences){
+        renameReference();
+    }
+    renamePage();
+
+    pathToRename.removeNameFromEnd();
+    pathToRename.addNameToEnd(newName);
+    
+    return PathParser.render(pathToRename);
+}
+```
+
+* 이름만 봐서는 함수가 하는 일이 분명하지가 않다.
+* doRename 함수 안에 renamePage라는 함수가 있어 더더욱 모호하다.
+* renamePageAndOptionallyAllReferences 라는 이름을 사용함으로써 바꿔주자.
+* 아주 길지만 모듈에서 한 번만 호출하기에 길다는 단점을 서술성이 충분히 메꿔준다.
+
+**결론**
+
+> 17장은 70% 정도만 이해되었던 것 같다. 자바의 추상화라는 개념이 부족해보였고 자바를 한번 더 복습해보고 다시 책을 읽을 때는 이해할 수 있도록..
