@@ -142,6 +142,109 @@ AND   A.고객ID = B.고객ID
 * 옵티마이저의 작은 실수가 기업에 큰 손실을 끼치는 시스템 같은 경우 위와 같이 빈틈없는 힌트 기술을 통해 다른 방식을 선택하지 못하도록 기술해준다.
 * **자주 사용하는 힌트 목록은 27P 참고**
 
+### 1.2 SQL 공유 및 재사용
+
+* SQL 내부 최적화 과정을 알고나면 동시성이 높은 트랜잭션 처리 시스템에서 바인드 변수가 왜 중요한지 이해하자.
+
+**소프트파싱 vs 하드파싱**
+
+* **SQL 파싱, 최적화, 로우 소스 생성 과정**을 거쳐 생성한 내부 프로시저를 반복 재사용할 수 있도록 캐싱해 두는 메모리 공간을 **라이브러리 캐시**라고 한다.
+
+![alt text](img/image.png)
+
+* 라이브러리 캐시는 위의 그림과 같은 구조이며 SGA구성요소이고, 서버 프로세스와 백그라운드 프로세스가 공통으로 액세스하는 데이터와 제어 구조를 캐싱하는 메모리 공간이다.
+
+![alt text](img/image-1.png)
+
+* 소프트 파싱과 하드 파싱은 위의 도식화한 그림으로 설명이 된다.
+
+* **소프트파싱** : SQL을 캐시에서 찾아 바로 실행단계로 넘어가는 것
+* **하드파싱** : 찾는 데 실패해 최적화 및 로우 소스 생성 단계까지 모두 거치는 것
+
+**SQL 최적화 과정은 왜 하드한가?**
+
+* 네비게이션을 예로 들어 가장 빠른 길을 선택하는 방식은 최적 경로 탐색이 꽤 어렵고 무거운 작업임을 알 수가 있다.
+* 마찬가지로 옵티마이저 SQL을 최적할 때도 훨씬 많은 일을 수행한다.
+    * ex) 다섯 개 테이블 조인 쿼리문 5! 가지 수, NL, 소트 머지, 해시, 테이블 전체, 인덱스 스캔 등등.. 고려해야 할 일이 상당히 많다.
+* 데이터베이스에서 이루어지는 처리 과정은 대부분 I/O 작업에 집중되는 반면, 하드 파싱은 **CPU를 많이 소비하는 몇 안되는 작업** 중 하나이다.
+* 어려운 하드파싱 작업을 거쳐 생성한 내부 프로시저를 **한 번만 사용하고 버린다면** 이만저만한 **비효율**이기 때문에 **라이브러리 캐시가 필요**하다
+
+### 1.2.1 바인드 변수의 중요성
+
+* 사용자 정의 함수/프로시저, 트리거, 패키지 등은 생성할 때부터 이름을 갖는다.
+* 컴파일 상태로 딕셔너리에 저장되며, 사용자가 삭제하지 않는 한 영구적으로 보관된다.
+* 실행할 때 라이브러리 캐시에 적재함으로써 여러 사용자가 공유하면서 재사용한다.
+
+**이름없는 SQL문제**
+
+* 반면에 SQL은 이름이 따로 없기 때문에 딕셔너리에 저장하지 않으며, 처음 실행할 때 최적화 과정을 거쳐 동적으로 생성한 내부 프로시저를 라이브러리 캐시에 적재함으로써 재사용한다.
+* 캐시 공간이 부족하게되면 버려졌다가 다음에 다시 실행할 떄 똑같은 과정을 거쳐 캐시에 적재된다.
+* 라이브러리 캐시에서 SQL을 찾기 위해 사용하는 키 값이 SQL문 그 자체이므로 각각 최적화를 진행하고 라이브러리 캐시에서 별도 공간을 사용한다.
+
+**아래 중요한 예제를 통해 알아보자**
+
+* 500만 고객을 보유한 어떤 쇼핑몰에서 로그인 모듈 담당 개발자가 프로그램을 아래와 같이 작성했다고 하자.
+
+```SQL
+public void login(String login_id) throws Exception{
+    String SQLStmt = "SELECT * FROM CUSTOMER WHERE LOGIN_ID = '" + login_id + "'";
+    Statement st = con.createStatement();
+    ResultSet rs = st.executeQuery(SQLStmt);
+    if(rs.next()){
+        // do anything
+    }
+    rs.close();
+    st.close();
+}
+```
+
+* 위와 같이 코드를 작성할 경우 100만 고객이 동시에 시스템 접속을 하면 무슨 일이 발생할까?
+* DBMS에 발생하는 부하는 대게 과도한 I/O가 원인이기 때문에 여러 종류의 경합 떄문에 로그인 처리가 제대로 처리되지 않을 것이다.
+* 이유는 SQL 하드파싱 때문이다. 내부 라이브러리 캐시(V$SQL)를 조회해보자.
+
+```SQL
+SELECT * FROM CUSTOMER WHERE LOGIN_ID = 'oraking'
+SELECT * FROM CUSTOMER WHERE LOGIN_ID = 'javaking'
+SELECT * FROM CUSTOMER WHERE LOGIN_ID = 'tommy'
+...
+...
+
+-- 내부 프로시저
+create procedure LOGIN_ORAKING() {...}
+create procedure LOGIN_JAVAKING() {...}
+create procedure LOGIN_TOMMY() {...}
+...
+...
+```
+
+* 로그인 프로그램을 이렇게 작성하게 되면 고객이 로그인할 때마다 DBMS 내부 프로시저를 하나씩 만들어서 라이브러리 캐시에 적재하는 셈이다.
+* 이런식으로 여러 개 생성할 것이 아니라 로그인ID를 파라미터로 받는 프로시저 하나를 공유하면서 재사용 하는 것이 유리하다.
+
+```SQL
+-- 로그인 ID를 파라미터로 받는 프로시저를 하나로 공유한다면?
+create procedure LOGIN (login_id in varchar2) {...}
+
+public void login(String login_id) throws Exception{
+    String SQLStmt = "SELECT * FROM CUSTOMER WHERE LOGIN_ID = ?";
+    PreparedStatement st = con.prepareStatement(SQLStmt);
+    st.setString(1, login_id);
+    ResultSet rs = st.executeQuery();
+    if(rs.next()){
+        // do anything
+    }
+    rs.close();
+    st.close();
+}
+
+-- 아래와 같은 로그인과 관련해서 아래 SQL 하나만 발견된다.
+SELECT * FROM CUSTOMER WHERE LOGIN_ID = :1
+```
+
+* 이처럼 파라미터 Driven 방식으로 SQL을 작성하는 방법이 제공되는데 이 것이 바로 바인드 변수이다.
+* 종합해보자면 하드파싱은 하나만 사용함으로써 캐싱된 SQL을 100만 고객이 공유하고 재사용함으로써 부담을 줄이는 것이다.
+
+
+
 
 
 ## 2장 인덱스 기본
