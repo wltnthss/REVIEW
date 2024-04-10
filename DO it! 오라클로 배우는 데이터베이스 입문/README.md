@@ -42,6 +42,26 @@
 
 ## 2장 실무에서 가장 많이 사용하는 SQL, 조회
 
+### 오라클 함수
+
+```SQL
+-- 대문자, 소문자, 첫글자 대문자 나머지 소문자 (UPPER, LOWER, INITCAP)
+SELECT ENAME, UPPER(ENAME), LOWER(ENAME), INITCAP(ENAME) FROM EMP;
+
+-- 문자열 길이 (LENGTH)
+SELECT ENAME, LENGTH(ENAME) FROM EMP;
+
+-- 문자열 일부 추출 (SUBSTR)
+SELECT SUBSTR(JOB, 1, 2), SUBSTR(ENAME, 1, 4), SUBSTR(ENAME, 2)  FROM EMP;
+
+-- 문자열 특정 문자 위치 검색 (INSTR)
+SELECT INSTR('SMITH', 'I') FROM EMP WHERE SAL = 800
+
+-- 특정 문자 다른 문자로 변환 (REPLACE)
+SELECT REPLACE('010-1111-2222', '-', ''), REPLACE('010-1111-2222', '-') FROM DUAL;
+
+```
+
 ## 3장 데이터를 조작, 정의, 제어하는 SQL 배우기
 
 ## 4장 PL/SQL 배우기
