@@ -60,6 +60,27 @@ SELECT INSTR('SMITH', 'I') FROM EMP WHERE SAL = 800
 -- 특정 문자 다른 문자로 변환 (REPLACE)
 SELECT REPLACE('010-1111-2222', '-', ''), REPLACE('010-1111-2222', '-') FROM DUAL;
 
+-- 데이터의 빈 공간을 특정 문자로 채우기 (LPAD, RPAD)
+SELECT lpad('oracle', 10, '*'), lpad('oracle', 10) FROM dual;
+SELECT rpad('951214-', '14', '*') FROM dual;
+
+-- 특정 문자를 지우기 (TRIM, LTRIM, RTRIM)
+SELECT '[' || TRIM('_' FROM '_ _ ORACLE_ _') || ']' -- BOTH 와 동일
+		,'[' || TRIM(LEADING '_' FROM '_ _ ORACLE _ _') || ']' 
+		,'[' || TRIM(TRAILING '_' FROM '_ _ ORACLE _ _') || ']'
+		,'[' || TRIM(BOTH '_' FROM '_ _ ORACLE_ _') || ']' 
+FROM DUAL;
+
+SELECT '[' || LTRIM(' _ ORACLE _ ') || ']' 
+		, '[' || LTRIM('<_ORACLE_>', '_<') || ']' 
+		, '[' || RTRIM(' _ ORACLE _ ') || ']'
+		, '[' || RTRIM('<%ORACLE%>', '>%') || ']'
+FROM DUAL;
+
+-- 특정 위치 반올림 (ROUND)
+SELECT ROUND(1234.5678), ROUND(1234.5678, 1), ROUND(1234.5678, -1) FROM DUAL;
+
+
 ```
 
 ## 3장 데이터를 조작, 정의, 제어하는 SQL 배우기
