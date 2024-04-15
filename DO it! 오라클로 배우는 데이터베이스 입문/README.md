@@ -262,6 +262,86 @@ ORDER BY
 	E1.MGR;
 ```
 
+### 서브쿼리 
+
+```SQL
+-- JONES 보다 급여가 높은 사원 조회
+SELECT
+	SAL
+FROM 
+	EMP
+WHERE 
+	ENAME = 'JONES'
+	
+SELECT 
+	*
+FROM 	
+	EMP 
+WHERE 
+	SAL > ( SELECT
+				SAL
+			FROM 
+				EMP
+			WHERE 
+				ENAME = 'JONES')
+
+-- 20번 부서에 속한 사원 중 전체 사원의 평균 급여보다 높은 급여를 받는 사원 정보와 소속 부서 정보
+SELECT
+	E.*,
+	D.*
+FROM
+	EMP E,
+	DEPT D
+WHERE
+	1=1
+	AND E.DEPTNO = D.DEPTNO
+	AND E.DEPTNO = 20
+	AND E.SAL >= (SELECT 
+					AVG(SAL)
+				  FROM 
+					EMP);
+
+-- 각 부서별 최고 급여와 동일한 급여를 받는 사원 정보 출력 
+SELECT
+	*
+FROM
+	EMP
+WHERE
+	SAL IN (
+			SELECT
+				MAX(SAL)
+			FROM
+				EMP
+			GROUP BY 
+				DEPTNO
+			);		
+
+-- 부서번호가 10번인 사원의 이름과 번호, 부서정보 출력
+WITH E10 AS
+(
+	SELECT * FROM EMP WHERE DEPTNO = 10
+),
+D AS 
+(
+	SELECT * FROM DEPT
+)
+SELECT
+	E10.EMPNO, E10.ENAME, D.DNAME, D.LOC
+FROM
+	E10, D
+WHERE 
+	E10.DEPTNO = D.DEPTNO	
+
+-- 급여가 LOSAL 과 HISAL 사이인 학년, 부서번호가 같은 부서이름 
+SELECT 
+	E1.EMPNO 
+	, E1.ENAME 
+	, (SELECT GRADE FROM SALGRADE S WHERE E1.SAL BETWEEN S.LOSAL AND S.HISAL) SALGRADE
+	, (SELECT DNAME FROM DEPT D WHERE D.DEPTNO = E1.DEPTNO) DNAME
+FROM 
+	EMP E1;											
+```
+
 ## 3장 데이터를 조작, 정의, 제어하는 SQL 배우기
 
 ## 4장 PL/SQL 배우기
