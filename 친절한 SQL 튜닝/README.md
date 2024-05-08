@@ -782,6 +782,60 @@ AND 거래일자 between :trd_dt1 and :trd_dt2
 
 * 인덱스 스캔 방식은 Index Range Scan 뿐만 아니라 Index Full Scan, Index Unique Scan, Index Skip Scan, Index Fast Full Scan 등이 존재한다. 각 스캔 방식의 주요 특징에 대해서 알아보자.
 
+### 2.3.1 Index Range Scan
+
+![alt text](image-11.png)
+
+* Index Range Scan은 B+Tree 인덱스의 가장 일반적이고 정상적인 형태의 액세스 방식이다.
+* 인덱스 루트에서 리프 블록까지 수직적으로 탐색한 후에 필요한 범위만 스캔한다.
+
+```sql
+SELECT * FROM EMP WHERE DEPNO = 20;
+```
+
+* 앞서 강조한 그대로 인덱스를 Range Scan 하려면 선두 컬럼을 가공하지 않은 상태로 조건절에 사용해야 한다. (선두 컬럼을 가공하지 않은 상태로 사용하면 무조건 Index Range Scan 가능)
+* 가공하지 않으면 Index Range Scan을 타기 때문에 성능도 좋다라고 당연하게 생각하면 안된다.
+* 성능은 인덱스 스캔 범위, 테이블 액세스 횟수를 얼마나 줄이는지가 관건이기 때문이다.
+
+
+
+### 2.3.2 Index Full Scan
+
+![alt text](image-12.png)
+
+* Index Full Scan 은 위의 그림처럼 수직적 탐색없이 인덱스 리프 블록을 처음부터 끝까지 수평적으로 탐색하는 방식이다.
+* 데이터 검색을 위한 최적의 인덱스가 없을 때 차선으로 선택된다.
+
+```sql
+CREATE INDEX EMP_ENAME_SAL_IDX ON EMP (ENAME, SAL);
+
+SELECT * FROM EMP
+WHERE SAL > 2000
+ORDER BY ENAME;
+```
+
+* 위의 예제 SQL에서는 인덱스 선두 컬럼인 ENAME이 존재하지 않으므로 Index Range Scan은 불가능하고, 뒤쪽에 SAL이 존재하므로 Index Full Scan을 통해 Sal이 2000보다 큰 레코드를 찾을 수 있다.
+
+### 2.3.3 Index Unique Scan
+
+![alt text](image-13.png)
+
+* Index Unique Scan은 그림처럼 수직적 탐색만으로 데이터를 찾는 스캔 방식이며 Unique 인덱스를 = 조건으로 탐색하는 경우에 작동한다.
+
+```sql
+CREATE UNIQUE INDEX PK_EMP ON EMP(EMPNO);
+
+SELECT EMPNO, ENAME FROM EMP WHERE EMPNO = 7788;
+```
+
+* 해당 인덱스 키 컬럼을 모두 '=' 조건으로 검색할 때는 데이터를 한 건 찾는 순간 더 이상 탐색할 필요가 없다.
+* Unique 인덱스라고 해도 범위검색 조건(between, like)으로 검색할 떄는 Index Range Scan으로 처리된다.
+* 예를 들어, empno >= 7788 조건은 수직적 탐색만으로는 조건에 해당하는 레코드를 찾을 수 없고, PK 인덱스를 [주문일자 + 고객ID + 상품ID] 로 구성했는데 주문일자과 고객ID로만 검색하는 경우도 Index Range Scan에 해당한다.
+
+### 2.3.4 Index Skip Scan
+
+* 인덱스 선두 컬럼을 조건절에 사용하지 않으면 옵티마이저는 기본적으로 Table Full Scan을 선택한다. 또는 Table Full Scan 보다 I/O를 줄일 수 있으면 Index Full Scan을 사용한다.
+
 
 
 
