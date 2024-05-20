@@ -10,6 +10,27 @@
 
 ## 3장 데이터 조회하기(기초)
 
+### 기초 아는 내용 패스
+
+**1. 원하는 개수 데이터 조회**
+
+```sql
+SELECT 열이름 FROM 테이블명 ORDER BY 정렬 기준 열 이름 LIMIT 숫자;
+
+-- 처음부터 5번째가 아닌 2번째부터 5번째까지 총 4개만 조회하는 경우
+SELECT 
+    chick_no, hatchday, egg_weight 
+FROM 
+    chick_info
+ORDER BY 
+    egg_weight DESC, hatchday ASC, chick_no ASC
+LIMIT 4 OFFSET 1;
+```
+
+**2. 데이터 타입 변환(TO_CHAR)**
+
+
+
 ## 4장 데이터 조회하기(고급)
 
 ## 5장 데이터 수정하기
