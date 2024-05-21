@@ -29,9 +29,69 @@ LIMIT 4 OFFSET 1;
 
 **2. 데이터 타입 변환(TO_CHAR)**
 
+```SQL
+SELECT TO_CHAR(NOW(), 'YYYY');
+SELECT TO_NUMBER('125', '999');
+SELECT TO_DATE('05 Dec 2022', 'DD Mon YYYY');
+SELECT NOW();
+```
 
+**3. NULL 변환(COALESCE, NULLIF)**
+
+```SQL
+COALESCE(열 이름, 반환값)
+NULLIF(열 이름, 특정값)
+
+-- COALESCE
+SELECT 
+    farm, date, humid, COALESCE(humid, 60)
+FROM 
+    env_cond
+WHERE 
+    date BETWEEN '2023-01-23' AND '2023-01-27'
+    AND farm = 'A';
+
+-- NULLIF
+SELECT 
+    farm, date, humid, NULLIF(humid, 60)
+FROM 
+    env_cond
+WHERE 
+    date BETWEEN '2023-01-23' AND '2023-01-27'
+    AND farm = 'A';    
+```
 
 ## 4장 데이터 조회하기(고급)
+
+**1. UNION, UNION ALL**
+
+* UNION : 중복 제거 O
+* UNION ALL : 중복 제거 X
+
+**UNION 사용 시 중복을 제거하기 위하여 데이터를 모두 검사하기 때문에 속도가 느리다. 왠만하면 UNION ALL 을 사용하자.**
+
+```SQL
+테이블 A UNION 테이블 B
+테이블 A UNION ALL 테이블 B
+
+(
+    SELECT 
+        chick_no, gender, hatchday
+    FROM 
+        chick_info
+    WHERE 
+        farm = 'A'
+        AND gender = 'F'
+        AND hatchday = '2023-01-03'
+)
+UNION
+(
+    SELECT 'A2300021','F','2023-01-05'
+);
+```
+
+**2. 서브쿼리와 뷰 테이블**
+
 
 ## 5장 데이터 수정하기
 
