@@ -6,7 +6,11 @@
 
 ## 1장 데이터베이스와 SQL
 
+### 기초 아는 내용 패스
+
 ## 2장 데이터베이스 설치하기
+
+### 기초 아는 내용 패스
 
 ## 3장 데이터 조회하기(기초)
 
@@ -92,6 +96,159 @@ UNION
 
 **2. 서브쿼리와 뷰 테이블**
 
+```sql
+-- 평균이 66.75 이상인 EGG_WEIGHT 대상건 조회
+SELECT 
+	CHICK_NO, EGG_WEIGHT
+FROM 
+	CHICK_INFO
+WHERE 
+	EGG_WEIGHT > (
+					SELECT 
+						AVG(EGG_WEIGHT) 
+					FROM 
+						CHICK_INFO CI 
+				  )
+```
+
+**스칼라 서브쿼리**
+
+```SQL
+-- INNER JOIN 
+SELECT 
+	A.CHICK_NO , A.BREEDS , B.CODE_DESC BREEDS_NM
+FROM 
+	CHICK_INFO A, MASTER_CODE B
+WHERE
+	1=1
+	AND A.BREEDS = B.CODE
+	AND B.COLUMN_NM = 'breeds'
+
+-- JOIN 대신에 스칼라 서브쿼리 (SELECT절 내에 단일 행 반환 경우 사용)
+SELECT 
+	CI.CHICK_NO 
+	, CI.BREEDS 
+	, (SELECT
+			MC.CODE_DESC
+		FROM
+			MASTER_CODE MC
+		WHERE
+			MC.CODE = CI.BREEDS
+			AND MC.COLUMN_NM = 'breeds'
+	   )
+FROM 
+	CHICK_INFO CI 
+```
+
+**인라인 뷰**
+
+```SQL
+-- JOIN 대신 인라인 뷰(FROM 절 후 SELECT 절 사용)
+SELECT 
+	A.CHICK_NO ,
+	A.BREEDS ,
+	B.BREEDS_NM
+FROM
+	CHICK_INFO A,
+(
+	SELECT 
+		MC.CODE CODE, MC.CODE_DESC BREEDS_NM
+	FROM 
+		MASTER_CODE MC
+	WHERE 
+		MC.COLUMN_NM = 'breeds'
+) B
+WHERE 
+	A.BREEDS = B.CODE;
+```
+
+**적재적소에 서브쿼리를 사용함으로써 불필요한 JOIN을 줄여 성능 향상을 위하여 서브쿼리를 사용한다.**
+
+**3. 가상 테이블 View**
+
+```SQL
+CREATE OR REPLACE VIEW 뷰테이블 이름 
+(열 이름1, 열 이름2 ...)
+AS 
+SELECT 문;
+
+-- 뷰 테이블 생성
+CREATE OR REPLACE VIEW VIW_BREEDS_PROD 
+(
+	PROD_DATE, BREEDS_NM, TOTAL_SUM 
+)
+AS 
+SELECT 
+	A.PROD_DATE,
+	(
+		SELECT
+			MC.CODE_DESC
+		FROM
+			MASTER_CODE MC
+		WHERE
+			1=1
+			AND MC.COLUMN_NM = 'breeds'
+			AND MC.CODE = B.BREEDS
+	),
+	SUM(A.RAW_WEIGHT) "TOTAL_SUM"
+FROM 
+	PROD_RESULT A,
+	CHICK_INFO B
+WHERE 
+	A.CHICK_NO = B.CHICK_NO
+	AND A.PASS_FAIL = 'P'
+GROUP BY 
+	A.PROD_DATE, B.BREEDS;
+```
+
+**4. 테이블 형태 변환(PIVOT)**
+
+```SQL
+-- PIVOT 사용 X 집계 쿼리 (부화일자별 병아리 마릿수)
+SELECT 
+	A.HATCHDAY,
+	SUM(CASE WHEN GENDER = 'M' THEN A.CNT ELSE 0 END) MALE,
+	SUM(CASE WHEN GENDER = 'F' THEN A.CNT ELSE 0 END) FEMALE
+FROM 
+(
+	SELECT 
+		HATCHDAY , GENDER , COUNT(*) CNT
+	FROM 
+		CHICK_INFO CI 
+	GROUP BY 
+		HATCHDAY , GENDER
+) A
+GROUP BY 
+	HATCHDAY
+ORDER BY 
+	HATCHDAY
+
+-- PIVOT 에 사용할 CROSSTAB 함수 사용방법
+SELECT *
+FROM CROSSTAB(
+    '행열 변경할 쿼리'
+)
+AS 새 테이블명(열 이름1, 데이터 타입1, 열 이름2, 데이터 타입2...)
+
+-- 테이블 함수 기능 확장 후 사용 가능
+CREATE EXTENSION TABLEFUNC;
+
+-- PIVOT 사용 O 집계 쿼리 (부화일자별 병아리 마릿수)
+SELECT 
+	*
+FROM crosstab
+(
+	'SELECT 
+		HATCHDAY , GENDER , COUNT(chick_no)::int AS CNT
+	FROM 
+		CHICK_INFO CI 
+	GROUP BY 
+		HATCHDAY , GENDER
+	ORDER BY 
+		HATCHDAY, GENDER DESC'
+)
+AS pivot_r(HATCHDAY date, "MALE" int, "FEMALE" int);
+```
 
 ## 5장 데이터 수정하기
 
