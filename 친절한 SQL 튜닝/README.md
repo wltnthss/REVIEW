@@ -944,7 +944,9 @@ SELECT * FROM 고객 WHERE 지역 = '서울';
 1. Table Full Scan 은 시퀀셜 액세스인 반면, 인덱스 ROWID를 이용한 액세스는 랜덤 액세스 방식이다.
 2. Table Full Scan은 Multiblock I/O인 반면, 인덱스 ROWID를 이용한 테이블 액세스는 Single Block I/O 방식이다.
 
-### 3.2.2 인덱스 컬럼 추가
+### 3.1.2 인덱스 컬럼 추가
+
+
 
 ## 4장 조인 튜닝
 
