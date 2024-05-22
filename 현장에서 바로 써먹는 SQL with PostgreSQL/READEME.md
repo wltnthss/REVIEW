@@ -149,6 +149,7 @@ SELECT
 	A.BREEDS ,
 	B.BREEDS_NM
 FROM
+
 	CHICK_INFO A,
 (
 	SELECT 
@@ -252,7 +253,31 @@ AS pivot_r(HATCHDAY date, "MALE" int, "FEMALE" int);
 
 ## 5장 데이터 수정하기
 
+### 기초 아는 내용 패스(CRUD)
+
 ## 6장 프로시저와 잡
+
+* 프로시저 : 일련의 쿼리를 하나의 함수처럼 실행하기 위한 쿼리의 집합.
+* 잡 : 정해진 시간에 반복적으로 작업을 실행할 수 있도록 스케줄링해 주는 기능.
+* 매일 09시 기준으로 창고의 재고 현황을 물류 관리 측면에서 기록하고 보고하는 경우를 구현하기 위해서는 프로시저와 잡이 필요하다.
+
+```SQL
+-- BREEDS_PROD_PROC 테이블 INSERT, SELECT문 프로시저 생성
+INSERT INFO BREEDS_PROD_TBL(PROD_DATE, BREEDS_NM, TOTAL_SUM, SAVE_TIME)
+(
+    SELECT 
+        PROD_DATE, BREEDS_NM, TOTAL_SUM ,CURRENT_TIMESTAMP AS SAVE_TIME
+    FROM 
+        BREEDS_PROD
+    WHERE 
+        PROD_DATE = '2023-01-31'
+);
+
+-- 프로시저 실행
+CALL 
+```
+
+**실무에서 프로시저를 많이 사용하니까 DataBase REPO에 프로시저 따로 공부하자..**
 
 ## 7장 사례 기반 실습
 
