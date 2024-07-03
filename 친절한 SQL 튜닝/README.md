@@ -1451,6 +1451,55 @@ AND 고객번호 = :CUST_NO
 * 위의 SQL문에서 어떤 컬럼이 앞에 오든 인덱스 스캔 효율에는 전혀 차이가 없다는 말이다.
 * 마찬가지로 뒤에 필터링 조건 BETWEEN 이나 IN 조건간에도 인덱스 스캔 효율에는 영향을 주지 않는다.
 
+## 4장 조인 튜닝
+
+### 4.1.1 NL 조인 기본 메커니즘
+
+```SQL
+SELECT E.사원명, C.고객명, C.전화번호
+FROM 사원 E, 고객 C
+WHERE E.입사일자 >= '19960101'
+AND C.관리사원번호 = E.사원번호
+```
+
+* 위 테이블에서 1996년 1월 1일 이후 입사한 사원이 관리하는 고객 데이터를 추출하는 데이터를 만들어 보자.
+* 가장 쉽게 생각하는 방법은 사원 테이블로부터 1996년 1월 1일 이후 입사한 사원을 찾은 후, 고객 테이블에서 사원번호가 일치하는 레코드를 찾는 것 이것이 **Nested Loop 조인이 사용하는 알고리즘**이다.
+* 아래 수행 구조를 통해 쉽게 이해할 수 있다.
+
+```SQL
+<C ,JAVA>
+for(i=0; i<100; i++){
+    for(j=0; j<100; j++){
+        ...
+    }
+}
+
+<PL/SQL>
+for outer in 1..100 loop
+    for inner in 1..100 loop
+        dbms_output.put_line(outer || ' : ' || inner);
+    end loop;
+end loop;
+
+begin 
+    for outer in(select 사원번호, 사원명 from 사원 where 입사일자 >= '19960101')
+    loop
+        for inner in (select 고객명, 전화번호 from 고객
+                      where 관리사원번호 = outer.사원번호)
+        loop
+            dbms_output.put_line(
+                outer.사원명 || ' : ' || inner.고객명 || ' : ' || inner.전화번호);
+        end loop
+    end loop;
+end;
+```
+
+* NL 조인은 위 중첩 루프문과 같은 수행 구조를 사용한다.
+* Outer와 Inner 양쪽 테이블 모두 인덱스를 이용하며 Outer쪽 테이블은 사이즈가 크지 않으면 인덱스를 이용하지 않을 수도 있다.
+* 반면 Inner 쪽 테이블은 인덱스를 사용해야 한다.
+* 관리사원번호로 고객 데이터를 검색할 때 Outer 루프에서 읽은 건수만큼 Table Full Scan을 반복하기 때문이다.
+* 결국 **NL조인은 인덱스를 이용한 조인 방식**이라고 할 수 있다.
+
 
 ## 4장 조인 튜닝
 
