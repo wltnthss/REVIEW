@@ -1779,7 +1779,99 @@ END;
 
 **필터 오퍼레이션**
 
+* 아래 쿼리는 서브 쿼리를 필터 방식으로 처리할 때의 실행계획이다. no_unnest 힌트를 사용하면 서브 쿼리를 풀어내지 말고 수행하라고 옵티마이저에 지시하는 힌트이다.
 
+```sql
+select c.고객번호, c.고객명
+from 고객 c
+where c.가입일시 >= trunc(add_months(sysdate, -1), 'mm')
+and exists(
+            select /*+ no_unnest */
+            from 거래
+            where 고객번호 = c.고객번호
+            and 거래일시 >= trunc(sysdate, 'mm') )
+          )
+Execution Plan
+------------------------------------------------------
+0       SELECT STATEMENT OPTIMIZER = ALL_ROWS 
+1   0       FILTER          
+2   1           TABLE ACCESS(BY INDEX ROWID) OF '고객' (TABLE)
+3   2               INDEX (RANGE SCAN) OF '고객_X01' (INDEX)
+4   1           INDEX (RANGE SCAN) OF '거래_X01' (INDEX)
+```
+
+* 필터 오퍼레이션은 기본적으로 NL조인과 루틴이 같으나 차이점이 존재하다면 메인쿼리의 한 로우가 서브쿼리의 한 로우와 조인에 성공하는 순간 멈추고, 메인쿼리의 다음 로우를 계속 처리한다는 점이다.
+
+### 4.4.4 스칼라 서브쿼리 조인 
+
+* 아래와 같은 GET_DNAME 함수가 있다.
+
+```SQL
+CREATE OR REPLACE FUNCTION GET_DNAME(P_DEPTNO NUMBER) RETURN VARCHAR2
+IS 
+    L_DNAME DEPT.DNMAE%TYPE;
+BEGIN
+    SELECT DNAME INTO L_DNAME FROM DEPT WHERE DEPTNO = P_DEPTNO;
+    RETURN L_DNAME;
+EXCEPTION 
+    WHEN OTHERS THEN
+        RETURN NULL;
+END;
+```
+
+* GET_DNAME 함수를 사용하는 아래 쿼리를 실행하면 함수 안에 있는 SELECT 쿼리를 메인쿼리 건 수 만큼 재귀적으로 반복 실행한다.
+
+```SQL
+SELECT EMPNO, ENAME, SAL, HIREDATE, GET_DNAME(E.DEPTNO) AS DNAME
+FROM EMP E
+WHERE SAL >= 2000
+```
+
+* 위에 코드는 아래 처럼 풀어서 사용가능하다.
+
+```SQL
+SELECT EMPNO, ENAME, SAL, HIREDATE,
+        ,(SELECT D.NAME FROM DEPT D WHERE D.DEPTNO = E.DEPTNO) AS DNAME
+FROM EMP E
+WHERE SAL >= 2000
+```
+
+* 이는 아래 OUTER 조인문처럼 하나의 문장으로 이해하라는 뜻이며, 아래 처럼 NL 조인 방식으로 실행된다.
+
+```SQL
+SELECT EMPNO, ENAME, SAL, HIREDATE, D.DNAME
+FROM EMP E LEFT OUTER JOIN DEPT D ON E.DEPTNO = D.DEPTNO
+WHERE E.SAL >= 2000
+```
+
+**스칼라 서브쿼리 캐싱 효과**
+
+* 스칼라 서브쿼리로 조인하면 오라클은 조인 횟수를 최소화하려고 입력 값과 출력 값을 내부 캐시에 저장해 둔다.
+* 조인할 때마다 캐시에서 입력 값을 찾아보고 찾으면 저장된 출력 값을 반환한다.
+* 캐시에서 찾지 못할 때만 조인을 수행하며, 결과는 버리지 않고 캐시에 저장해준다.
+* 스칼라 서브쿼리의 입력 값은, 그 안에서 참조하는 메인 쿼리의 컬럼 값이다.
+
+```SQL
+SELECT EMPNO, ENAME, SAL, HIREDATE
+        ,(SELECT D.NAME -- 출력 값 : D.NAME
+          FROM DEPT D 
+          WHERE D.DEPTNO = E.DEPTNO -- 입력 값 : E.EMPNO
+        ) AS DNAME
+FROM EMP E
+WHERE SAL >= 2000
+```
+
+* 캐싱은 쿼리 단위로 이루어지며, 쿼리를 시작할 때 PGA 메모리에 공간을 할당하고, 쿼리를 수행하면서 공간을 채워나가고, 쿼리를 마치는 순간 공간을 반환한다.
+* 아래의 예제는 많이 활용 되는 튜닝 기법에 해당한다.
+
+```SQL
+SELECT EMPNO, ENAME, SAL, HIREDATE
+        ,(SELECT GET_DNAME(E.DEPTNO) FROM DUAL) AS DNAME
+FROM EMP E
+WHERE SAL >= 2000
+```
+
+* 위와 같이 SELECT-LIST에 사용한 함수는 메인 쿼리 결과 건 수 만큼 반복 수행되는데, 스칼라 서브쿼리를 덧씌우면 호출 횟수를 최소화할 수 있다. 
 
 ## 5장 소트 튜닝
 
